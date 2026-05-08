@@ -53,14 +53,19 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#06B6D4",
-          "sounds": []
+          "color": "#38BDF8",
+          "sounds": [
+            "./assets/sounds/water-drop.wav",
+            "./assets/sounds/gentle-bell.wav",
+            "./assets/sounds/success-chime.wav"
+          ]
         }
       ],
       "expo-background-fetch",
       "expo-localization",
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true

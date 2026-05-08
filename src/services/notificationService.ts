@@ -8,33 +8,48 @@ import { Platform } from 'react-native';
 import { NOTIFICATION_CHANNEL_ID } from '@/constants';
 import { hydrationMessages } from '@/utils/motivational';
 
+export type NotificationSound = 'water-drop' | 'gentle-bell' | 'success-chime' | 'none';
+
+export const SOUND_OPTIONS: { id: NotificationSound; label: string; description: string }[] = [
+  { id: 'water-drop',    label: 'Water Drop',    description: 'Soft drip sound' },
+  { id: 'gentle-bell',   label: 'Gentle Bell',   description: 'Soft chime' },
+  { id: 'success-chime', label: 'Success Chime', description: 'Upbeat tone' },
+  { id: 'none',          label: 'No Sound',      description: 'Silent, vibration only' },
+];
+
 // re-export rotating messages
 export { hydrationMessages } from '@/utils/motivational';
 
+// Android channel IDs per sound
+const channelForSound = (sound: NotificationSound): string =>
+  sound === 'none' ? `${NOTIFICATION_CHANNEL_ID}-silent` : `${NOTIFICATION_CHANNEL_ID}-${sound}`;
+
 let configured = false;
 
-export const configureNotifications = async (): Promise<void> => {
-  if (configured) return;
+export const configureNotifications = async (sound: NotificationSound = 'water-drop'): Promise<void> => {
   try {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,
       shouldShowList: true,
-      shouldPlaySound: true,
+      shouldPlaySound: sound !== 'none',
       shouldSetBadge: false,
     }),
   });
 
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(NOTIFICATION_CHANNEL_ID, {
-      name: 'Hydration Reminders',
-      importance: Notifications.AndroidImportance.HIGH,
-      sound: 'aqua-drop',
-      vibrationPattern: [0, 200, 80, 200],
-      lightColor: '#22D3EE',
-      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-      enableVibrate: true,
-    });
+    // Create a channel for each sound so switching works without reinstall
+    for (const opt of SOUND_OPTIONS) {
+      await Notifications.setNotificationChannelAsync(channelForSound(opt.id), {
+        name: `Hydration Reminders (${opt.label})`,
+        importance: Notifications.AndroidImportance.HIGH,
+        sound: opt.id === 'none' ? undefined : `${opt.id}`,
+        vibrationPattern: [0, 200, 80, 200],
+        lightColor: '#22D3EE',
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        enableVibrate: true,
+      });
+    }
   }
 
   configured = true;
@@ -69,10 +84,10 @@ const pickMessage = (i: number, messages: readonly string[]): string => {
 
 export interface ReminderScheduleInput {
   intervalMinutes: number;
-  // 'HH:mm' 24h
-  wakeTime: string;
+  wakeTime: string;  // 'HH:mm' 24h
   sleepTime: string;
   messages?: readonly string[];
+  sound?: NotificationSound;
 }
 
 const parseHm = (s: string): { hour: number; minute: number } => {
@@ -88,6 +103,7 @@ export const scheduleHydrationReminders = async ({
   wakeTime,
   sleepTime,
   messages = hydrationMessages,
+  sound = 'water-drop',
 }: ReminderScheduleInput): Promise<string[]> => {
   try {
   await Notifications.cancelAllScheduledNotificationsAsync();
@@ -99,6 +115,10 @@ export const scheduleHydrationReminders = async ({
   const sleepMins = sleep.hour * 60 + sleep.minute;
   if (sleepMins <= wakeMins) return [];
 
+  // iOS: sound file name; Android: use per-sound channel
+  const iosSound = sound === 'none' ? undefined : `${sound}.wav`;
+  const androidChannelId = channelForSound(sound);
+
   const ids: string[] = [];
   let cursor = wakeMins;
   let i = 0;
@@ -109,8 +129,8 @@ export const scheduleHydrationReminders = async ({
       content: {
         title: 'Watery',
         body: pickMessage(i, messages),
-        sound: 'aqua-drop',
-        ...(Platform.OS === 'android' ? { channelId: NOTIFICATION_CHANNEL_ID } : {}),
+        sound: Platform.OS === 'ios' ? iosSound : undefined,
+        ...(Platform.OS === 'android' ? { channelId: androidChannelId } : {}),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
@@ -156,7 +176,8 @@ export const sendTestNotification = async (): Promise<{ success: boolean; error?
       content: {
         title: '✅ Notifications working',
         body,
-        ...(Platform.OS === 'android' ? { channelId: NOTIFICATION_CHANNEL_ID } : {}),
+        ...(Platform.OS === 'android' ? { channelId: channelForSound('water-drop') } : {}),
+      sound: Platform.OS === 'ios' ? 'water-drop.wav' : undefined,
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3, repeats: false },
     });
@@ -240,6 +261,7 @@ export interface LegacyScheduleInput {
   sleepTime?: string;
   silent?: boolean;
   sound?: boolean;
+  notificationSound?: NotificationSound;
   messages?: readonly string[];
 }
 
@@ -261,6 +283,7 @@ const scheduleHydrationRemindersLoose = async (
     wakeTime,
     sleepTime,
     messages: input.messages ?? hydrationMessages,
+    sound: input.notificationSound ?? (input.sound === false ? 'none' : 'water-drop'),
   });
 };
 

@@ -52,7 +52,7 @@ export const WaterWaveProgress = React.memo(function WaterWaveProgress({
   glow = true,
   style,
 }: WaterWaveProgressProps): JSX.Element {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const safeProgress = clamp(progress, 0, 1);
   const half = size / 2;
   const radiusVal = half - 8;
@@ -79,6 +79,35 @@ export const WaterWaveProgress = React.memo(function WaterWaveProgress({
   );
   // Border dashed when empty to hint "fill me"
   const ringColor = isEmpty ? theme.colors.border : wave1Color;
+
+  // Text color logic: wave fills from bottom up.
+  // Center text (at 50% height) is above water when progress < ~0.55 (accounting for wave amplitude).
+  // In light mode: bg is white → need dark text when not filled.
+  // In dark mode: bg is dark → need light text always.
+  // Threshold: wave covers center text when visualProgress >= 0.52
+  const waveCoversText = visualProgress >= 0.52;
+  const textOnWave = '#FFFFFF';                    // text when sitting on blue wave
+  const textOnBg = isDark ? theme.colors.text : theme.colors.text;  // text when on bg (dark on light, light on dark)
+  const centerTextColor = isEmpty
+    ? theme.colors.primary
+    : waveCoversText
+      ? textOnWave
+      : textOnBg;
+  const centerSubColor = isEmpty
+    ? theme.colors.textSubtle
+    : waveCoversText
+      ? 'rgba(255,255,255,0.75)'
+      : theme.colors.textMuted;
+  const pillBg = isEmpty
+    ? theme.colors.primaryGlow
+    : waveCoversText
+      ? 'rgba(0,0,0,0.25)'
+      : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)');
+  const pillTextColor = isEmpty
+    ? theme.colors.primary
+    : waveCoversText
+      ? '#FFFFFF'
+      : theme.colors.primary;
 
   // JS state for SVG path strings — updated via setInterval on JS thread
   const [wave1, setWave1] = useState(() => buildWavePath(size, size, visualProgress, amplitude, 0));
@@ -170,7 +199,7 @@ export const WaterWaveProgress = React.memo(function WaterWaveProgress({
         />
       </Svg>
 
-      {/* center text */}
+      {/* center text — colors adapt based on wave fill level vs text position */}
       <View pointerEvents="none" style={{ alignItems: 'center' }}>
         <Text
           variant="caption"
@@ -178,7 +207,7 @@ export const WaterWaveProgress = React.memo(function WaterWaveProgress({
             textTransform: 'uppercase',
             letterSpacing: 2,
             fontSize: 10,
-            color: isEmpty ? theme.colors.textMuted : 'rgba(255,255,255,0.75)',
+            color: centerSubColor,
           }}
         >
           {isEmpty ? 'Tap to add' : 'Today'}
@@ -189,18 +218,15 @@ export const WaterWaveProgress = React.memo(function WaterWaveProgress({
           style={{
             fontSize: size * 0.2,
             lineHeight: size * 0.24,
-            color: isEmpty ? theme.colors.primary : '#FFFFFF',
-            textShadowColor: isEmpty ? 'transparent' : 'rgba(0,0,0,0.25)',
+            color: centerTextColor,
+            textShadowColor: waveCoversText && !isEmpty ? 'rgba(0,0,0,0.22)' : 'transparent',
             textShadowOffset: { width: 0, height: 1 },
-            textShadowRadius: isEmpty ? 0 : 4,
+            textShadowRadius: waveCoversText && !isEmpty ? 4 : 0,
           }}
         >
           {isEmpty ? `${(goalMl / 1000).toFixed(1)}L` : `${mlToLiters(currentMl, 1)}L`}
         </Text>
-        <Text
-          variant="caption"
-          style={{ color: isEmpty ? theme.colors.textSubtle : 'rgba(255,255,255,0.70)' }}
-        >
+        <Text variant="caption" style={{ color: centerSubColor }}>
           {isEmpty ? 'goal for today' : `of ${mlToLiters(goalMl, 1)}L`}
         </Text>
         <View
@@ -209,14 +235,10 @@ export const WaterWaveProgress = React.memo(function WaterWaveProgress({
             paddingHorizontal: 12,
             paddingVertical: 4,
             borderRadius: 999,
-            backgroundColor: isEmpty ? theme.colors.primaryGlow : 'rgba(0,0,0,0.28)',
+            backgroundColor: pillBg,
           }}
         >
-          <Text
-            variant="caption"
-            weight="semibold"
-            style={{ color: isEmpty ? theme.colors.primary : '#FFFFFF', fontSize: 11 }}
-          >
+          <Text variant="caption" weight="semibold" style={{ color: pillTextColor, fontSize: 11 }}>
             {percentLabel}
           </Text>
         </View>

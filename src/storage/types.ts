@@ -86,6 +86,8 @@ export type Settings = {
   sleepHour: number;
   // unit system used by daily-goal calculations
   units: 'metric' | 'imperial';
+  // notification sound file name (without extension) or 'none'
+  notificationSound: 'water-drop' | 'gentle-bell' | 'success-chime' | 'none';
 };
 
 export type Badge = {
@@ -144,6 +146,7 @@ export const DEFAULT_SETTINGS: Settings = {
   wakeHour: 7,
   sleepHour: 22,
   units: 'metric',
+  notificationSound: 'water-drop',
 };
 
 export const DEFAULT_GAMIFICATION: Gamification = {

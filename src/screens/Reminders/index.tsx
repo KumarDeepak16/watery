@@ -2,7 +2,8 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createAudioPlayer } from 'expo-audio';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -22,7 +23,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTheme } from '@/hooks/useTheme';
 import { useSettingsStore } from '@/stores/useSettingsStore';
-import { notificationService } from '@/services/notificationService';
+import { notificationService, SOUND_OPTIONS } from '@/services/notificationService';
 
 const INTERVAL_SEGMENTS = [
   { id: '15', label: '15m' },
@@ -49,7 +50,7 @@ const formatHour = (h: number): string =>
   hourToDate(h).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
 export default function RemindersScreen(): JSX.Element {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const haptics = useHaptics();
   const settings = useSettingsStore();
   const { permission, requestPermission, upcomingToday, refreshUpcoming } = useNotifications();
@@ -63,11 +64,40 @@ export default function RemindersScreen(): JSX.Element {
   const [sound, setSound] = useState(settings.soundEnabled);
   const [hapticsOn, setHapticsOn] = useState(settings.hapticsEnabled);
   const [snoozeMin, setSnoozeMin] = useState(settings.snoozeMin);
+  const [notifSound, setNotifSound] = useState<import('@/services/notificationService').NotificationSound>(
+    settings.notificationSound ?? 'water-drop',
+  );
 
   const [customSheet, setCustomSheet] = useState(false);
   const [customMin, setCustomMin] = useState(intervalMin);
   const [openTime, setOpenTime] = useState<'wake' | 'sleep' | null>(null);
   const [saving, setSaving] = useState(false);
+  const [playingSound, setPlayingSound] = useState<string | null>(null);
+
+  // Sound sources mapped by id
+  const SOUND_SOURCES: Record<string, number> = {
+    'water-drop': require('../../../assets/sounds/water-drop.wav'),
+    'gentle-bell': require('../../../assets/sounds/gentle-bell.wav'),
+    'success-chime': require('../../../assets/sounds/success-chime.wav'),
+  };
+
+  const previewSound = useCallback(async (soundId: string) => {
+    if (soundId === 'none') return;
+    const source = SOUND_SOURCES[soundId];
+    if (!source) return;
+    try {
+      setPlayingSound(soundId);
+      const player = createAudioPlayer(source);
+      player.play();
+      // Auto-cleanup after 3s
+      setTimeout(() => {
+        try { player.remove(); } catch { /* ignore */ }
+        setPlayingSound(null);
+      }, 3000);
+    } catch {
+      setPlayingSound(null);
+    }
+  }, []);
 
   // segmented value reflects custom when nonstandard
   const intervalSegId = useMemo(
@@ -128,6 +158,7 @@ export default function RemindersScreen(): JSX.Element {
       soundEnabled: sound,
       hapticsEnabled: hapticsOn,
       snoozeMin,
+      notificationSound: notifSound,
     });
     if (enabled) {
       await notificationService.scheduleHydrationReminders({
@@ -136,6 +167,7 @@ export default function RemindersScreen(): JSX.Element {
         sleepHour,
         silent,
         sound,
+        notificationSound: notifSound,
       });
     } else {
       await notificationService.cancelAll();
@@ -151,6 +183,7 @@ export default function RemindersScreen(): JSX.Element {
     sound,
     hapticsOn,
     snoozeMin,
+    notifSound,
     settings,
     refreshUpcoming,
     haptics,
@@ -339,16 +372,68 @@ export default function RemindersScreen(): JSX.Element {
                 }}
               />
               <Divider />
-              <ToggleRow
-                label="Notification sound"
-                desc="Soft water chime"
-                value={sound && !silent}
-                disabled={silent}
-                onChange={(v) => {
-                  haptics.selection();
-                  setSound(v);
-                }}
-              />
+              {/* Sound selector */}
+              <View style={{ paddingVertical: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <View>
+                    <Text variant="caption" weight="medium" color={silent ? colors.textSubtle : colors.text}>
+                      Notification sound
+                    </Text>
+                    <Text variant="micro" muted>Choose ringtone</Text>
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'column', gap: 6, opacity: silent ? 0.4 : 1 }}>
+                  {SOUND_OPTIONS.map((opt) => {
+                    const selected = notifSound === opt.id;
+                    return (
+                      <Pressable
+                        key={opt.id}
+                        onPress={() => {
+                          if (silent) return;
+                          haptics.selection();
+                          setNotifSound(opt.id);
+                          setSound(opt.id !== 'none');
+                          void previewSound(opt.id);
+                        }}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 12,
+                          paddingVertical: 10,
+                          paddingHorizontal: 12,
+                          borderRadius: 12,
+                          backgroundColor: selected
+                            ? (isDark ? 'rgba(56,189,248,0.12)' : 'rgba(0,119,182,0.07)')
+                            : 'transparent',
+                          borderWidth: selected ? 1 : 0,
+                          borderColor: selected ? colors.primary : 'transparent',
+                        }}
+                      >
+                        <Ionicons
+                          name={opt.id === 'none' ? 'volume-mute-outline' : 'musical-note-outline'}
+                          size={16}
+                          color={selected ? colors.primary : colors.textMuted}
+                        />
+                        <View style={{ flex: 1 }}>
+                          <Text variant="caption" weight={selected ? 'semibold' : 'regular'} color={selected ? colors.primary : colors.text}>
+                            {opt.label}
+                          </Text>
+                          <Text variant="micro" muted>
+                            {playingSound === opt.id ? 'Playing...' : opt.description}
+                          </Text>
+                        </View>
+                        {selected && (
+                          <Ionicons
+                            name={playingSound === opt.id ? 'volume-high' : 'checkmark-circle'}
+                            size={18}
+                            color={colors.primary}
+                          />
+                        )}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
               <Divider />
               <ToggleRow
                 label="Haptics"

@@ -26,7 +26,7 @@ export function GlassCard({
   const { theme, isDark } = useTheme();
   const blur = intensity ?? (isDark ? 32 : 55);
   const useBlur = Platform.OS === 'ios';
-  const pad = padding ?? 20;
+  const pad = padding ?? 0;  // callers use className="p-5" or style={{padding:n}} — don't double-pad
 
   return (
     <View
