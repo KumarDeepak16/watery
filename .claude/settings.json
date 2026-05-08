@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"Exit: $?\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx tsc --noEmit 2>&1; \"EXIT=$LASTEXITCODE\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; Remove-Item \"f:\\\\aquapulse\\\\tserrors.txt\" -ErrorAction SilentlyContinue; Get-ChildItem \"f:\\\\aquapulse\" -Force | Where-Object { -not $_.PSIsContainer } | Select-Object Name | Format-Table -AutoSize; \"---\"; Get-ChildItem \"f:\\\\aquapulse\\\\src\" -Recurse -File | Measure-Object | Select-Object -ExpandProperty Count; \"src files\"; Get-ChildItem \"f:\\\\aquapulse\\\\app\" -Recurse -File | Measure-Object | Select-Object -ExpandProperty Count; \"app files\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx expo export --platform web --output-dir \"f:\\\\aquapulse\\\\.test-export\" 2>&1 | Select-Object -Last 30; \"EXIT=$LASTEXITCODE\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx expo export --platform android --output-dir \"f:\\\\aquapulse\\\\.test-export\" 2>&1 | Select-Object -Last 30; \"EXIT=$LASTEXITCODE\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx tsc --noEmit 2>&1 | Select-Object -First 20; \"EXIT=$LASTEXITCODE\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx tsc --noEmit 2>&1 | Select-Object -First 5; \"EXIT=$LASTEXITCODE\")",
+      "PowerShell(node -e \"console.log\\(require\\('F:/aquapulse/node_modules/@shopify/react-native-skia/package.json'\\).version\\)\")",
+      "PowerShell(node -e \"console.log\\(require\\('F:/aquapulse/node_modules/react-native-mmkv/package.json'\\).version\\)\")",
+      "PowerShell(node -e \"console.log\\(require\\('F:/aquapulse/node_modules/victory-native/package.json'\\).version\\)\")",
+      "PowerShell(node -e \"console.log\\(require\\('F:/aquapulse/node_modules/react-native-reanimated/package.json'\\).version\\)\")",
+      "PowerShell(Get-ChildItem \"F:\\\\aquapulse\" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.PSIsContainer -eq $false } | Select-Object FullName | ForEach-Object { $_.FullName } | Where-Object { $_ -notmatch \"node_modules\" -and $_ -notmatch \".test-export\" })",
+      "PowerShell(node -e \"console.log\\(require\\('F:/aquapulse/node_modules/lottie-react-native/package.json'\\).version\\)\" 2>&1)",
+      "PowerShell(node -e \"console.log\\(require\\('F:/aquapulse/node_modules/react-native-confetti-cannon/package.json'\\).version\\)\" 2>&1)",
+      "PowerShell(node -e \"const s = require\\('F:/aquapulse/node_modules/@shopify/react-native-skia'\\); console.log\\(Object.keys\\(s\\).filter\\(k => k.includes\\('Derived'\\) || k.includes\\('derived'\\)\\)\\)\")",
+      "PowerShell(New-Item -ItemType File -Force -Path \"F:\\\\aquapulse\\\\assets\\\\lottie\\\\.gitkeep\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx tsc --noEmit 2>&1 | Select-Object -First 30; \"EXIT=$LASTEXITCODE\")",
+      "Bash(grep -n \"set\\(\\(s\\) => \\({ \\\\.\\\\.\\\\.s,\" f:/aquapulse/src/stores/settingsStore.ts f:/aquapulse/src/stores/gamificationStore.ts f:/aquapulse/src/stores/userStore.ts)",
+      "PowerShell(Get-Content \"C:\\\\Users\\\\onlym\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\f--aquapulse\\\\5638e0f8-914d-4e9f-8e5b-c5ad1efa3ea9\\\\tasks\\\\bdsw369cx.output\" -Wait -ErrorAction SilentlyContinue)",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx tsc --noEmit 2>&1 | Select-Object -First 15; \"EXIT=$LASTEXITCODE\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx expo start --clear 2>&1 | Select-Object -First 5; \"EXIT=$LASTEXITCODE\")",
+      "Skill(impeccable)",
+      "Skill(impeccable:*)",
+      "Bash(node .claude/skills/impeccable/scripts/load-context.mjs)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(echo \"Exit code: $?\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx tsc --noEmit 2>&1 | Select-Object -First 10; \"EXIT=$LASTEXITCODE\")",
+      "Bash(echo \"EXIT:$?\")",
+      "PowerShell(\\(Get-Content \"f:\\\\aquapulse\\\\src\\\\screens\\\\Onboarding\\\\steps\\\\WelcomeStep.tsx\"\\) -replace 'Easing\\\\.sine', 'Easing.sin' | Set-Content \"f:\\\\aquapulse\\\\src\\\\screens\\\\Onboarding\\\\steps\\\\WelcomeStep.tsx\")",
+      "PowerShell(Set-Location \"f:\\\\aquapulse\"; npx expo export --platform android --output-dir \".test-export\" 2>&1 | Select-String \"ERROR|Error|error\" | Select-Object -First 20; \"EXIT=$LASTEXITCODE\")",
+      "PowerShell(\"done\")"
+    ]
+  }
+}
