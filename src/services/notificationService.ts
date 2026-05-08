@@ -43,7 +43,7 @@ export const configureNotifications = async (sound: NotificationSound = 'water-d
       await Notifications.setNotificationChannelAsync(channelForSound(opt.id), {
         name: `Hydration Reminders (${opt.label})`,
         importance: Notifications.AndroidImportance.HIGH,
-        sound: opt.id === 'none' ? undefined : `${opt.id}`,
+        sound: opt.id === 'none' ? undefined : opt.id.replace(/-/g, '_'),
         vibrationPattern: [0, 200, 80, 200],
         lightColor: '#22D3EE',
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
@@ -116,7 +116,7 @@ export const scheduleHydrationReminders = async ({
   if (sleepMins <= wakeMins) return [];
 
   // iOS: sound file name; Android: use per-sound channel
-  const iosSound = sound === 'none' ? undefined : `${sound}.wav`;
+  const iosSound = sound === 'none' ? undefined : `${sound.replace(/-/g, '_')}.wav`;
   const androidChannelId = channelForSound(sound);
 
   const ids: string[] = [];
@@ -177,7 +177,7 @@ export const sendTestNotification = async (): Promise<{ success: boolean; error?
         title: '✅ Notifications working',
         body,
         ...(Platform.OS === 'android' ? { channelId: channelForSound('water-drop') } : {}),
-      sound: Platform.OS === 'ios' ? 'water-drop.wav' : undefined,
+      sound: Platform.OS === 'ios' ? 'water_drop.wav' : undefined,
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3, repeats: false },
     });

@@ -76,9 +76,9 @@ export default function RemindersScreen(): JSX.Element {
 
   // Sound sources mapped by id
   const SOUND_SOURCES: Record<string, number> = {
-    'water-drop': require('../../../assets/sounds/water-drop.wav'),
-    'gentle-bell': require('../../../assets/sounds/gentle-bell.wav'),
-    'success-chime': require('../../../assets/sounds/success-chime.wav'),
+    'water-drop': require('../../../assets/sounds/water_drop.wav'),
+    'gentle-bell': require('../../../assets/sounds/gentle_bell.wav'),
+    'success-chime': require('../../../assets/sounds/success_chime.wav'),
   };
 
   const previewSound = useCallback(async (soundId: string) => {

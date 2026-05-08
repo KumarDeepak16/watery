@@ -55,9 +55,9 @@
           "icon": "./assets/icon.png",
           "color": "#38BDF8",
           "sounds": [
-            "./assets/sounds/water-drop.wav",
-            "./assets/sounds/gentle-bell.wav",
-            "./assets/sounds/success-chime.wav"
+            "./assets/sounds/water_drop.wav",
+            "./assets/sounds/gentle_bell.wav",
+            "./assets/sounds/success_chime.wav"
           ]
         }
       ],
