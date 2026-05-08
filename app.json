@@ -38,7 +38,9 @@
         "WAKE_LOCK",
         "POST_NOTIFICATIONS",
         "FOREGROUND_SERVICE",
-        "SCHEDULE_EXACT_ALARM"
+        "SCHEDULE_EXACT_ALARM",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.WAKE_LOCK"
       ]
     },
     "web": {
@@ -62,6 +64,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1dd29224-8910-4679-b9db-424bc9819a31"
+      }
+    },
+    "owner": "deepak1619"
   }
 }
